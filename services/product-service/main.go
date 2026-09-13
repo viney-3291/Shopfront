@@ -81,3 +81,4 @@ func main() {
 	log.Println("product-service listening on :4002")
 	log.Fatal(http.ListenAndServe(":4002", mux))
 }
+// ci test
