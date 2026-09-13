@@ -1,0 +1,156 @@
+name: shopfront
+
+services:
+  # ---------- infrastructure ----------
+  redis:
+    image: redis:7-alpine
+    mem_limit: 64m
+    restart: unless-stopped
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    mem_limit: 64m
+    ports:
+      - "8025:8025" # web UI to view "sent" emails
+    restart: unless-stopped
+
+  # ---------- edge ----------
+  frontend:
+    build: ./frontend
+    mem_limit: 64m
+    ports:
+      - "3000:80"
+    depends_on:
+      - api-gateway
+    restart: unless-stopped
+
+  api-gateway:
+    build: ./services/api-gateway
+    mem_limit: 150m
+    ports:
+      - "8080:8080" # optional: lets you curl the API directly
+    depends_on:
+      - auth-service
+      - product-service
+      - cart-service
+      - inventory-service
+      - order-service
+      - payment-service
+      - shipping-service
+      - review-service
+      - recommendation-service
+      - notification-service
+      - search-service
+    restart: unless-stopped
+
+  # ---------- backend services ----------
+  auth-service:
+    build: ./services/auth-service
+    mem_limit: 150m
+    environment:
+      JWT_SECRET: ${JWT_SECRET:-demo-secret-key-change-me}
+      DATA_DIR: /data
+    volumes:
+      - auth-data:/data
+    restart: unless-stopped
+
+  product-service:
+    build: ./services/product-service
+    mem_limit: 64m
+    restart: unless-stopped
+
+  cart-service:
+    build: ./services/cart-service
+    mem_limit: 64m
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  inventory-service:
+    build: ./services/inventory-service
+    mem_limit: 64m
+    restart: unless-stopped
+
+  search-service:
+    build: ./services/search-service
+    mem_limit: 64m
+    environment:
+      PRODUCT_SERVICE_URL: http://product-service:4002
+    depends_on:
+      - product-service
+    restart: unless-stopped
+
+  order-service:
+    build: ./services/order-service
+    mem_limit: 200m
+    environment:
+      DATA_DIR: /data
+      INVENTORY_SERVICE_URL: http://inventory-service:4004
+      PAYMENT_SERVICE_URL: http://payment-service:4006
+      PRODUCT_SERVICE_URL: http://product-service:4002
+      NOTIFICATION_SERVICE_URL: http://notification-service:4010
+      CART_SERVICE_URL: http://cart-service:4003
+    volumes:
+      - order-data:/data
+    depends_on:
+      - inventory-service
+      - payment-service
+      - product-service
+      - notification-service
+      - cart-service
+    restart: unless-stopped
+
+  payment-service:
+    build: ./services/payment-service
+    mem_limit: 150m
+    restart: unless-stopped
+
+  shipping-service:
+    build: ./services/shipping-service
+    mem_limit: 100m
+    restart: unless-stopped
+
+  review-service:
+    build: ./services/review-service
+    mem_limit: 100m
+    environment:
+      DATA_DIR: /data
+    volumes:
+      - review-data:/data
+    restart: unless-stopped
+
+  recommendation-service:
+    build: ./services/recommendation-service
+    mem_limit: 150m
+    environment:
+      PRODUCT_SERVICE_URL: http://product-service:4002
+    depends_on:
+      - product-service
+    restart: unless-stopped
+
+  notification-service:
+    build: ./services/notification-service
+    mem_limit: 150m
+    environment:
+      EMAIL_SERVICE_URL: http://email-service:4011
+    depends_on:
+      - email-service
+    restart: unless-stopped
+
+  email-service:
+    build: ./services/email-service
+    mem_limit: 100m
+    environment:
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+    depends_on:
+      - mailhog
+    restart: unless-stopped
+
+volumes:
+  auth-data:
+  order-data:
+  review-data:
