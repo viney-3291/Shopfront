@@ -1,12 +1,15 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"strings"
+
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 type Product struct {
@@ -25,11 +28,18 @@ func productServiceURL() string {
 	return "http://product-service:4002"
 }
 
-func fetchProducts() ([]Product, error) {
-	resp, err := http.Get(productServiceURL() + "/products")
+var tracedClient = &http.Client{Transport: otelhttp.NewTransport(http.DefaultTransport)}
+
+func fetchProducts(ctx context.Context) ([]Product, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, productServiceURL()+"/products", nil)
 	if err != nil {
 		return nil, err
 	}
+	resp, err := tracedClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -56,6 +66,9 @@ func withCORS(h http.HandlerFunc) http.HandlerFunc {
 }
 
 func main() {
+	shutdown := initTracer("search-service")
+	defer shutdown()
+
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/health", withCORS(func(w http.ResponseWriter, r *http.Request) {
@@ -64,7 +77,7 @@ func main() {
 
 	mux.HandleFunc("/search", withCORS(func(w http.ResponseWriter, r *http.Request) {
 		q := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("q")))
-		products, err := fetchProducts()
+				products, err := fetchProducts(r.Context())
 		if err != nil {
 			w.WriteHeader(http.StatusBadGateway)
 			json.NewEncoder(w).Encode(map[string]string{"error": "product-service unavailable"})
@@ -85,6 +98,7 @@ func main() {
 		json.NewEncoder(w).Encode(results)
 	}))
 
+	handler := otelhttp.NewHandler(mux, "search-service")
 	log.Println("search-service listening on :4012")
-	log.Fatal(http.ListenAndServe(":4012", mux))
+	log.Fatal(http.ListenAndServe(":4012", handler))
 }
