@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 type Product struct {
@@ -45,7 +46,10 @@ func withCORS(h http.HandlerFunc) http.HandlerFunc {
 }
 
 func main() {
-	mux := http.NewServeMux()
+		shutdown := initTracer("product-service")
+		defer shutdown()
+		
+		mux := http.NewServeMux()
 
 	mux.HandleFunc("/health", withCORS(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(`{"status":"ok","service":"product-service"}`))
@@ -78,8 +82,10 @@ func main() {
 		json.NewEncoder(w).Encode(map[string]string{"error": "product not found"})
 	}))
 
+	handler := otelhttp.NewHandler(mux, "product-service")
 	log.Println("product-service listening on :4002")
-	log.Fatal(http.ListenAndServe(":4002", mux))
+	log.Fatal(http.ListenAndServe(":4002", handler))
+
 }
 // ci test
 // trigger real build
