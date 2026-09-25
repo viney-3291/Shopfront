@@ -19,12 +19,11 @@ func initTracer(serviceName string) func() {
 
 	endpoint := os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT")
 	if endpoint == "" {
-		endpoint = "otel-collector:4318"
+		endpoint = "http://otel-collector:4318"
 	}
 
 	exporter, err := otlptracehttp.New(ctx,
-		otlptracehttp.WithEndpoint(endpoint),
-		otlptracehttp.WithInsecure(),
+		otlptracehttp.WithEndpointURL(endpoint),
 	)
 	if err != nil {
 		log.Printf("tracing: could not create exporter, continuing without tracing: %v", err)
