@@ -2,6 +2,7 @@ FROM golang:1.22-alpine AS build
 WORKDIR /app
 COPY go.mod .
 COPY *.go .
+RUN go mod tidy
 RUN CGO_ENABLED=0 go build -o /out/service .
 
 FROM alpine:3.20

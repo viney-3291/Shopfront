@@ -30,5 +30,9 @@ module "eks" {
       most_recent              = true
       service_account_role_arn = module.ebs_csi_irsa.iam_role_arn
     }
+    amazon-cloudwatch-observability = {
+      most_recent              = true
+      service_account_role_arn = aws_iam_role.cloudwatch_observability.arn
+    }
   }
 }
