@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 var (
@@ -36,6 +37,9 @@ func withCORS(h http.HandlerFunc) http.HandlerFunc {
 }
 
 func main() {
+	shutdown := initTracer("inventory-service")
+	defer shutdown()
+
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/health", withCORS(func(w http.ResponseWriter, r *http.Request) {
@@ -87,6 +91,7 @@ func main() {
 		json.NewEncoder(w).Encode(map[string]interface{}{"released": true, "remaining": stock[req.ProductID]})
 	}))
 
+	handler := otelhttp.NewHandler(mux, "inventory-service")
 	log.Println("inventory-service listening on :4004")
-	log.Fatal(http.ListenAndServe(":4004", mux))
+	log.Fatal(http.ListenAndServe(":4004", handler))
 }
