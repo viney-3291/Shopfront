@@ -5,4 +5,4 @@ RUN npm install --omit=dev --no-audit --no-fund
 COPY index.js .
 USER node
 EXPOSE 4007
-CMD ["node", "index.js"]
+CMD ["node", "--require", "@opentelemetry/auto-instrumentations-node/register", "index.js"]

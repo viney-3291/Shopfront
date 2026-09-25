@@ -6,4 +6,4 @@ COPY index.js .
 RUN mkdir -p /data && chown -R node:node /data
 USER node
 EXPOSE 4001
-CMD ["node", "index.js"]
+CMD ["node", "--require", "@opentelemetry/auto-instrumentations-node/register", "index.js"]
