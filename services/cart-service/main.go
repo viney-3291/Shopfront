@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 type CartItem struct {
@@ -55,6 +56,9 @@ func withCORS(h http.HandlerFunc) http.HandlerFunc {
 }
 
 func main() {
+	shutdown := initTracer("cart-service")
+	defer shutdown()
+
 	rdb = NewRedisClient()
 	mux := http.NewServeMux()
 
@@ -130,6 +134,7 @@ func main() {
 		}
 	}))
 
+	handler := otelhttp.NewHandler(mux, "cart-service")
 	log.Println("cart-service listening on :4003")
-	log.Fatal(http.ListenAndServe(":4003", mux))
+	log.Fatal(http.ListenAndServe(":4003", handler))
 }
