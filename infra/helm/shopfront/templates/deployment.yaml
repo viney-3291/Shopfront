@@ -1,0 +1,46 @@
+{{- range $name, $svc := .Values.services }}
+{{- $persistence := default dict $svc.persistence }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  labels:
+    app: {{ $name }}
+spec:
+  replicas: {{ $svc.replicas | default 1 }}
+  selector:
+    matchLabels:
+      app: {{ $name }}
+  template:
+    metadata:
+      labels:
+        app: {{ $name }}
+    spec:
+      containers:
+        - name: {{ $name }}
+          image: "{{ $.Values.image.registry }}/shopfront-{{ $name }}:{{ $.Values.image.tag }}"
+          imagePullPolicy: {{ $.Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ $svc.port }}
+          resources:
+            requests:
+              memory: {{ $svc.memory | default "64Mi" }}
+            limits:
+              memory: {{ $svc.memory | default "64Mi" }}
+          {{- if $svc.env }}
+          env:
+            {{- toYaml $svc.env | nindent 12 }}
+          {{- end }}
+          {{- if $persistence.enabled }}
+          volumeMounts:
+            - name: data
+              mountPath: {{ $persistence.mountPath }}
+          {{- end }}
+      {{- if $persistence.enabled }}
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ $name }}-pvc
+      {{- end }}
+---
+{{- end }}

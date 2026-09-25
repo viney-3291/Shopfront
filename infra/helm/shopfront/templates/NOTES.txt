@@ -1,0 +1,13 @@
+Shopfront is deploying to your cluster.
+
+Check rollout status:
+  kubectl get pods -w
+
+Get the frontend's public address (may take a minute or two to provision):
+  kubectl get svc frontend -w
+
+Once EXTERNAL-IP shows a hostname (not <pending>), open it in your browser.
+
+To peek at MailHog (order confirmation emails) without exposing it publicly:
+  kubectl port-forward svc/mailhog 8025:8025
+  then open http://localhost:8025
