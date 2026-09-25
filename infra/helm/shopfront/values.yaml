@@ -3,24 +3,28 @@ image:
   tag: stable
   pullPolicy: IfNotPresent
 
-# JWT secret used by auth-service. Override this at install time with
-# --set jwtSecret=something-random for anything beyond local testing.
 jwtSecret: demo-secret-key-change-me
 
-# One entry per backend service. Keys here MUST match the service name used
-# in docker-compose.yml, since other services reach each other by that name
-# over Kubernetes DNS — e.g. order-service calling http://inventory-service:4004
-# works with zero code changes because the k8s Service is also named inventory-service.
+otelEndpoint: http://otel-collector:4318
+
 services:
   api-gateway:
     port: 8080
     memory: 150Mi
-    env: []
+    env:
+      - name: OTEL_SERVICE_NAME
+        value: api-gateway
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://otel-collector:4318
 
   auth-service:
     port: 4001
     memory: 150Mi
     env:
+      - name: OTEL_SERVICE_NAME
+        value: auth-service
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://otel-collector:4318
       - name: JWT_SECRET
         valueFrom:
           secretKeyRef:
@@ -36,12 +40,20 @@ services:
   product-service:
     port: 4002
     memory: 64Mi
-    env: []
+    env:
+      - name: OTEL_SERVICE_NAME
+        value: product-service
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://otel-collector:4318
 
   cart-service:
     port: 4003
     memory: 64Mi
     env:
+      - name: OTEL_SERVICE_NAME
+        value: cart-service
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://otel-collector:4318
       - name: REDIS_HOST
         value: redis
       - name: REDIS_PORT
@@ -50,12 +62,20 @@ services:
   inventory-service:
     port: 4004
     memory: 64Mi
-    env: []
+    env:
+      - name: OTEL_SERVICE_NAME
+        value: inventory-service
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://otel-collector:4318
 
   order-service:
     port: 4005
     memory: 200Mi
     env:
+      - name: OTEL_SERVICE_NAME
+        value: order-service
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://otel-collector:4318
       - name: DATA_DIR
         value: /data
       - name: INVENTORY_SERVICE_URL
@@ -76,17 +96,29 @@ services:
   payment-service:
     port: 4006
     memory: 150Mi
-    env: []
+    env:
+      - name: OTEL_SERVICE_NAME
+        value: payment-service
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://otel-collector:4318
 
   shipping-service:
     port: 4007
     memory: 100Mi
-    env: []
+    env:
+      - name: OTEL_SERVICE_NAME
+        value: shipping-service
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://otel-collector:4318
 
   review-service:
     port: 4008
     memory: 100Mi
     env:
+      - name: OTEL_SERVICE_NAME
+        value: review-service
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://otel-collector:4318
       - name: DATA_DIR
         value: /data
     persistence:
@@ -98,6 +130,10 @@ services:
     port: 4009
     memory: 150Mi
     env:
+      - name: OTEL_SERVICE_NAME
+        value: recommendation-service
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://otel-collector:4318
       - name: PRODUCT_SERVICE_URL
         value: http://product-service:4002
 
@@ -105,6 +141,10 @@ services:
     port: 4010
     memory: 150Mi
     env:
+      - name: OTEL_SERVICE_NAME
+        value: notification-service
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://otel-collector:4318
       - name: EMAIL_SERVICE_URL
         value: http://email-service:4011
 
@@ -112,6 +152,10 @@ services:
     port: 4011
     memory: 100Mi
     env:
+      - name: OTEL_SERVICE_NAME
+        value: email-service
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://otel-collector:4318
       - name: SMTP_HOST
         value: mailhog
       - name: SMTP_PORT
@@ -121,14 +165,16 @@ services:
     port: 4012
     memory: 64Mi
     env:
+      - name: OTEL_SERVICE_NAME
+        value: search-service
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://otel-collector:4318
       - name: PRODUCT_SERVICE_URL
         value: http://product-service:4002
 
 frontend:
   port: 80
   memory: 64Mi
-  # LoadBalancer provisions a real AWS ELB (small extra cost, ~$16-20/mo).
-  # Switch to ClusterIP + kubectl port-forward if you just want to poke at it.
   serviceType: LoadBalancer
 
 redis:
