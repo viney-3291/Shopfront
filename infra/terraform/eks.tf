@@ -8,8 +8,6 @@ module "eks" {
   vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
 
-  # Lets you reach the API server from your laptop for kubectl/Terraform.
-  # Fine for a demo; a real production cluster would restrict this to a VPN/office CIDR.
   cluster_endpoint_public_access = true
 
   eks_managed_node_groups = {
@@ -23,6 +21,14 @@ module "eks" {
     }
   }
 
-  # Gives your current AWS CLI identity admin access to the cluster automatically
   enable_cluster_creator_admin_permissions = true
+
+  enable_irsa = true
+
+  cluster_addons = {
+    aws-ebs-csi-driver = {
+      most_recent              = true
+      service_account_role_arn = module.ebs_csi_irsa.iam_role_arn
+    }
+  }
 }
