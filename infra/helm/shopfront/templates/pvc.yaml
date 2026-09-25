@@ -1,0 +1,15 @@
+{{- range $name, $svc := .Values.services }}
+{{- $persistence := default dict $svc.persistence }}
+{{- if $persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $name }}-pvc
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: {{ $persistence.size | default "1Gi" }}
+---
+{{- end }}
+{{- end }}

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: shopfront
+description: Shopfront microservices e-commerce demo — 13 backend services + frontend
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

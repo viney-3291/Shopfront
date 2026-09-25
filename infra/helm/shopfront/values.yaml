@@ -1,0 +1,140 @@
+image:
+  registry: ghcr.io/viney-3291
+  tag: stable
+  pullPolicy: IfNotPresent
+
+# JWT secret used by auth-service. Override this at install time with
+# --set jwtSecret=something-random for anything beyond local testing.
+jwtSecret: demo-secret-key-change-me
+
+# One entry per backend service. Keys here MUST match the service name used
+# in docker-compose.yml, since other services reach each other by that name
+# over Kubernetes DNS — e.g. order-service calling http://inventory-service:4004
+# works with zero code changes because the k8s Service is also named inventory-service.
+services:
+  api-gateway:
+    port: 8080
+    memory: 150Mi
+    env: []
+
+  auth-service:
+    port: 4001
+    memory: 150Mi
+    env:
+      - name: JWT_SECRET
+        valueFrom:
+          secretKeyRef:
+            name: shopfront-secrets
+            key: jwt-secret
+      - name: DATA_DIR
+        value: /data
+    persistence:
+      enabled: true
+      mountPath: /data
+      size: 1Gi
+
+  product-service:
+    port: 4002
+    memory: 64Mi
+    env: []
+
+  cart-service:
+    port: 4003
+    memory: 64Mi
+    env:
+      - name: REDIS_HOST
+        value: redis
+      - name: REDIS_PORT
+        value: "6379"
+
+  inventory-service:
+    port: 4004
+    memory: 64Mi
+    env: []
+
+  order-service:
+    port: 4005
+    memory: 200Mi
+    env:
+      - name: DATA_DIR
+        value: /data
+      - name: INVENTORY_SERVICE_URL
+        value: http://inventory-service:4004
+      - name: PAYMENT_SERVICE_URL
+        value: http://payment-service:4006
+      - name: PRODUCT_SERVICE_URL
+        value: http://product-service:4002
+      - name: NOTIFICATION_SERVICE_URL
+        value: http://notification-service:4010
+      - name: CART_SERVICE_URL
+        value: http://cart-service:4003
+    persistence:
+      enabled: true
+      mountPath: /data
+      size: 1Gi
+
+  payment-service:
+    port: 4006
+    memory: 150Mi
+    env: []
+
+  shipping-service:
+    port: 4007
+    memory: 100Mi
+    env: []
+
+  review-service:
+    port: 4008
+    memory: 100Mi
+    env:
+      - name: DATA_DIR
+        value: /data
+    persistence:
+      enabled: true
+      mountPath: /data
+      size: 1Gi
+
+  recommendation-service:
+    port: 4009
+    memory: 150Mi
+    env:
+      - name: PRODUCT_SERVICE_URL
+        value: http://product-service:4002
+
+  notification-service:
+    port: 4010
+    memory: 150Mi
+    env:
+      - name: EMAIL_SERVICE_URL
+        value: http://email-service:4011
+
+  email-service:
+    port: 4011
+    memory: 100Mi
+    env:
+      - name: SMTP_HOST
+        value: mailhog
+      - name: SMTP_PORT
+        value: "1025"
+
+  search-service:
+    port: 4012
+    memory: 64Mi
+    env:
+      - name: PRODUCT_SERVICE_URL
+        value: http://product-service:4002
+
+frontend:
+  port: 80
+  memory: 64Mi
+  # LoadBalancer provisions a real AWS ELB (small extra cost, ~$16-20/mo).
+  # Switch to ClusterIP + kubectl port-forward if you just want to poke at it.
+  serviceType: LoadBalancer
+
+redis:
+  image: redis:7-alpine
+  memory: 64Mi
+
+mailhog:
+  image: mailhog/mailhog:v1.0.1
+  memory: 64Mi
