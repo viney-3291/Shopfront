@@ -1,0 +1,5 @@
+image:
+  tag: stable
+
+frontend:
+  serviceType: ClusterIP
