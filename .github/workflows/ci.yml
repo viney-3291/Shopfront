@@ -130,3 +130,16 @@ jobs:
             ${{ env.ECR_REGISTRY }}/shopfront-${{ matrix.service }}:sha-${{ steps.vars.outputs.sha_short }}
             ${{ env.ECR_REGISTRY }}/shopfront-${{ matrix.service }}:latest
           cache-from: type=gha,scope=${{ matrix.service }}
+
+  ci-success:
+    needs: [detect-changes, build]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check build result
+        run: |
+          if [ "${{ needs.build.result }}" = "failure" ]; then
+            echo "Build job failed"
+            exit 1
+          fi
+          echo "OK — build passed or had nothing to build"
