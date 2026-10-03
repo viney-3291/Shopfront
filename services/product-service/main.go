@@ -91,3 +91,4 @@ func main() {
 // trigger real build
 // verify pipeline
 // verify ECR push
+// debug oidc
