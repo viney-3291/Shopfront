@@ -1,5 +1,5 @@
 image:
-  registry: ghcr.io/viney-3291
+  registry: 865749917919.dkr.ecr.us-east-1.amazonaws.com
   tag: stable
   pullPolicy: IfNotPresent
 
