@@ -92,3 +92,4 @@ func main() {
 // verify pipeline
 // verify ECR push
 // debug oidc
+// retest ecr push after oidc fix
