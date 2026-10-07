@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: "{{ .Values.image.registry }}/shopfront-frontend:{{ .Values.image.tag }}"
+          image: "{{ .Values.image.registry }}/shopfront-frontend:{{ .Values.frontend.imageTag | default .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: 80
