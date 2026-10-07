@@ -3,6 +3,7 @@ image:
 
 frontend:
   serviceType: ClusterIP
+  replicas: 4
 
 services:
   product-service:

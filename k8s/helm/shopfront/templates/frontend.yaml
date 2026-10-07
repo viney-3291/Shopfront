@@ -1,11 +1,18 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
 metadata:
   name: frontend
   labels:
     app: frontend
 spec:
-  replicas: 1
+  replicas: {{ .Values.frontend.replicas | default 1 }}
+  strategy:
+    canary:
+      steps:
+        - setWeight: 25
+        - pause: {}
+        - setWeight: 50
+        - pause: { duration: 30s }
   selector:
     matchLabels:
       app: frontend
