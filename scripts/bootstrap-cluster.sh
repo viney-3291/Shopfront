@@ -45,10 +45,10 @@ kubectl -n argo-rollouts rollout status deployment/argo-rollouts --timeout=300s
 echo "==> Istio"
 helm repo add istio https://istio-release.storage.googleapis.com/charts >/dev/null 2>&1 || true
 helm repo update >/dev/null
-ver=()
-[ -n "$ISTIO_VERSION" ] && ver=(--version "$ISTIO_VERSION")
-helm upgrade --install istio-base istio/base -n istio-system --create-namespace --wait "${ver[@]}"
-helm upgrade --install istiod istio/istiod -n istio-system --wait "${ver[@]}"
+VER_FLAG=""
+[ -n "$ISTIO_VERSION" ] && VER_FLAG="--version $ISTIO_VERSION"
+helm upgrade --install istio-base istio/base -n istio-system --create-namespace --wait $VER_FLAG
+helm upgrade --install istiod istio/istiod -n istio-system --wait $VER_FLAG
 
 echo "==> Argo CD apps (dev + prod)"
 kubectl apply -f k8s/argocd/
