@@ -8,6 +8,16 @@ spec:
   replicas: {{ .Values.frontend.replicas | default 1 }}
   strategy:
     canary:
+      {{- if and .Values.istio .Values.istio.enabled }}
+      stableService: frontend
+      canaryService: frontend-canary
+      trafficRouting:
+        istio:
+          virtualService:
+            name: frontend
+            routes:
+              - primary
+      {{- end }}
       steps:
         - setWeight: 25
         - pause: {}
@@ -44,3 +54,35 @@ spec:
   ports:
     - port: 80
       targetPort: 80
+
+{{- if and .Values.istio .Values.istio.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-canary
+spec:
+  type: ClusterIP
+  selector:
+    app: frontend
+  ports:
+    - port: 80
+      targetPort: 80
+---
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: frontend
+spec:
+  hosts:
+    - frontend
+  http:
+    - name: primary
+      route:
+        - destination:
+            host: frontend
+          weight: 100
+        - destination:
+            host: frontend-canary
+          weight: 0
+{{- end }}
