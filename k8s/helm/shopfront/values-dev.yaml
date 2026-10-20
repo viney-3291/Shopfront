@@ -4,7 +4,7 @@ image:
 frontend:
   serviceType: ClusterIP
   replicas: 4
-  imageTag: v0.2.0
+  imageTag: latest
 
 services:
   product-service:
