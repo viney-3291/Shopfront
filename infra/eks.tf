@@ -25,6 +25,17 @@ module "eks" {
 
   enable_irsa = true
 
+  node_security_group_additional_rules = {
+    ingress_istiod_webhook = {
+      description                   = "Control plane to istiod webhook"
+      protocol                      = "tcp"
+      from_port                     = 15017
+      to_port                       = 15017
+      type                          = "ingress"
+      source_cluster_security_group = true
+    }
+  }
+
   cluster_addons = {
     aws-ebs-csi-driver = {
       most_recent              = true
