@@ -9,3 +9,6 @@ frontend:
 services:
   product-service:
     replicas: 2
+
+istio:
+  enabled: true
