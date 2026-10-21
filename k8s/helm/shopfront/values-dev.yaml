@@ -12,3 +12,6 @@ services:
 
 istio:
   enabled: true
+
+externalSecrets:
+  enabled: true

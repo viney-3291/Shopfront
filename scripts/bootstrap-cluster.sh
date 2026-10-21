@@ -50,6 +50,15 @@ VER_FLAG=""
 helm upgrade --install istio-base istio/base -n istio-system --create-namespace --wait $VER_FLAG
 helm upgrade --install istiod istio/istiod -n istio-system --wait $VER_FLAG
 
+echo "==> External Secrets Operator"
+ESO_ROLE_ARN="$(terraform -chdir=infra output -raw external_secrets_role_arn)"
+helm repo add external-secrets https://charts.external-secrets.io >/dev/null 2>&1 || true
+helm repo update >/dev/null
+helm upgrade --install external-secrets external-secrets/external-secrets \
+  -n external-secrets --create-namespace --wait \
+  --set "serviceAccount.annotations.eks\.amazonaws\.com/role-arn=$ESO_ROLE_ARN"
+kubectl apply -f k8s/external-secrets/cluster-secret-store.yaml
+
 echo "==> Argo CD apps (dev + prod)"
 kubectl apply -f k8s/argocd/
 
