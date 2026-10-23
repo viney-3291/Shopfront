@@ -1,0 +1,34 @@
+# Checkov config for Shopfront infrastructure.
+# Every skip below is a deliberate, documented decision.
+
+directory:
+  - infra
+
+framework:
+  - terraform
+
+skip-path:
+  - .terraform
+
+compact: true
+quiet: true
+
+skip-check:
+  # ECR tag immutability: CI overwrites the `latest` and `stable` tags on
+  # every build, which immutable repositories forbid.
+  - CKV_AWS_51
+
+  # Customer-managed KMS keys for ECR and Secrets Manager. AWS-managed
+  # encryption is already enabled; a CMK costs ~$1/month per key.
+  - CKV_AWS_136
+  - CKV_AWS_149
+
+  # Registry modules are pinned with a version constraint (~> 20.0).
+  # Commit-hash pinning only applies to raw git sources.
+  - CKV_TF_1
+
+  # Secret rotation requires a Lambda rotation function. Future work.
+  - CKV2_AWS_57
+
+  # The VPC intentionally uses whatever AZs the region offers.
+  - CKV_AWS_394
