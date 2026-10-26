@@ -20,6 +20,7 @@
 
          - uses: anthropics/claude-code-action@v1
            with:
+             show_full_output: true
              anthropic_federation_rule_id: ${{ secrets.ANTHROPIC_FED_RULE_ID }}  
              anthropic_organization_id: ${{ secrets.ANTHROPIC_ORG_ID }}
              anthropic_service_account_id: ${{ secrets.ANTHROPIC_SVC_ACCOUNT_ID }}
